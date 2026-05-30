@@ -10,8 +10,7 @@ async function getCurrentWeather(city) {
 }
 
 async function askClaude(messages, weatherContext) {
-  const res = await fetch('http://localhost:3001/api/chat', {
-    method: 'POST',
+const res = await fetch('https://weather-ai-chatbot-production.up.railway.app/api/chat', {    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ messages, weatherContext })
   })
@@ -53,20 +52,27 @@ export default function App() {
   const [chatLoading, setChatLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  async function handleSearch(e) {
-    e.preventDefault()
-    if (!city.trim()) return
-    setLoading(true); setError(null)
-    try {
-      const data = await getCurrentWeather(city)
-      setWeather(data)
-      setMessages(prev => [...prev, {
-        role:'assistant',
-        content:`Météo à ${data.name} : ${Math.round(data.main.temp)}°C, ${data.weather[0].description} ${getEmoji(data.weather[0].main)}`
-      }])
-    } catch(e) { setError('Ville introuvable. Vérifiez le nom.') }
-    setLoading(false)
+ async function handleChat(e) {
+  e.preventDefault()
+  if (!input.trim() || chatLoading) return
+  const userMsg = { role: 'user', content: input }
+  const newMessages = [...messages, userMsg]
+  setMessages(newMessages)
+  setInput('')
+  setChatLoading(true)
+  try {
+    const cleanMessages = newMessages
+      .filter(m => m.role === 'user' || m.role === 'assistant')
+      .filter(m => typeof m.content === 'string' && m.content.trim() !== '')
+      .slice(-10)
+      
+    const reply = await askClaude(cleanMessages, weather)
+    setMessages(prev => [...prev, { role: 'assistant', content: reply }])
+  } catch(e) {
+    setMessages(prev => [...prev, { role: 'assistant', content: 'Erreur de connexion. Réessayez 🙏' }])
   }
+  setChatLoading(false)
+}
 
   async function handleChat(e) {
     e.preventDefault()
