@@ -1,12 +1,12 @@
 import express from 'express'
 import cors from 'cors'
 import Groq from 'groq-sdk'
-
+import 'dotenv/config'
 const app = express()
 app.use(cors())
 app.use(express.json())
 
-const groq = new Groq({ apiKey: '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' })
+const groq = new Groq({ apiKey: process.env.GROQ_KEY })
 
 app.get('/', (req, res) => res.send('Backend Works'))
 
